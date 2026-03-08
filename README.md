@@ -413,6 +413,16 @@ Every limitation is chosen deliberately for freedom, not imposed by vendors.
 
 ---
 
+## 💰 Support This Work
+
+Building and documenting sovereignty infrastructure takes time. If you find this valuable, tips are appreciated but never required.
+
+**[→ TIP_JAR.md - Lightning, Bitcoin, Litecoin, Monero](TIP_JAR.md)**
+
+We practice what we preach: sovereign, permissionless, privacy-preserving payments only.
+
+---
+
 ## 📜 License
 
 **MIT License**
