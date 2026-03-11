@@ -17,32 +17,35 @@ This guide documents a **real, working NanoClaw setup** focused on privacy, sove
 ## 🏗️ Architecture Overview
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                    HOST SYSTEM (Your Machine)                │
-│                                                              │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────────┐  │
-│  │ Molly/Signal │  │   Whisper    │  │   Parmanode      │  │
-│  │  (Hardened)  │  │  (Local STT) │  │ (Bitcoin Node)   │  │
-│  └──────┬───────┘  └──────┬───────┘  └────────┬─────────┘  │
-│         │                 │                    │            │
-│         │                 │                    │            │
-│  ┌──────┴─────────────────┴────────────────────┴─────────┐  │
-│  │                                                        │  │
-│  │              NanoClaw Container                        │  │
-│  │  ┌──────────────────────────────────────────────┐     │  │
-│  │  │  • Processes messages from Signal/Molly      │     │  │
-│  │  │  • Receives transcribed voice via Whisper    │     │  │
-│  │  │  • Session-based, ephemeral containers       │     │  │
-│  │  │  • Skills: MoltBook, Clawstr, agent-browser  │     │  │
-│  │  └──────────────────────────────────────────────┘     │  │
-│  │                                                        │  │
-│  └────────────────────────────────────────────────────────┘  │
-│                                                              │
-└─────────────────────────────────────────────────────────────┘
-           │                        │
-           ▼                        ▼
-    Zeus Embedded Node      Cake Wallet → Parmanode
-    (Phone - Lightning)     (Phone - Multi-coin)
+┌──────────────────────────────────────────────────────────────────┐
+│                     HOST SYSTEM (Your Machine)                    │
+│                                                                   │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────────┐       │
+│  │ Molly/Signal │  │   Whisper    │  │   Parmanode      │       │
+│  │  (Hardened)  │  │  (Local STT) │  │ (Bitcoin Node)   │       │
+│  └──────┬───────┘  └──────┬───────┘  └────────┬─────────┘       │
+│         │                 │                    │                  │
+│  ┌──────┴─────────────────┴────────────────────┴───────────────┐ │
+│  │                                                              │ │
+│  │                   NanoClaw Container                         │ │
+│  │  ┌────────────────────────────────────────────────────┐     │ │
+│  │  │  • Processes messages from Signal/Molly            │     │ │
+│  │  │  • Marmot channel: E2EE via MLS + Nostr relays     │     │ │
+│  │  │  • Receives transcribed voice via Whisper           │     │ │
+│  │  │  • Decrypts MIP-04 encrypted images from Blossom   │     │ │
+│  │  │  • Session-based, ephemeral containers              │     │ │
+│  │  │  • Skills: MoltBook, Clawstr, agent-browser         │     │ │
+│  │  └────────────────────────────────────────────────────┘     │ │
+│  │                                                              │ │
+│  └──────────────────────────────────────────────────────────────┘ │
+│                                                                   │
+└──────────────────────────────────────────────────────────────────┘
+     │                │                        │
+     ▼                ▼                        ▼
+White Noise    Zeus Embedded Node      Cake Wallet → Parmanode
+(Marmot E2EE)  (Phone - Lightning)     (Phone - Multi-coin)
++ Sayboard
+(Voice Input)
 ```
 
 **Key insight:** Signal, Whisper, and Bitcoin infrastructure run **outside** the NanoClaw container for maximum sovereignty and persistence. The container is ephemeral by design - trust through architecture, not promises.
@@ -339,12 +342,82 @@ You can always:
 
 ---
 
+## 🔐 Component 5: Marmot / White Noise (Decentralized E2EE Messaging)
+
+### Why Marmot?
+
+**No corporate servers.** Marmot combines MLS (Messaging Layer Security, RFC 9420) with the Nostr relay network for fully decentralized end-to-end encrypted group messaging. No Signal Foundation, no Meta, no single point of failure.
+
+**Forward secrecy + post-compromise security** via MLS epoch-based key rotation.
+
+**Interoperable** with White Noise mobile app (open-source, available on F-Droid/Obtainium).
+
+### What We Built
+
+A NanoClaw channel integration that enables bidirectional E2EE messaging with the White Noise app:
+
+**Text messaging:** Terminal ↔ White Noise, fully encrypted via MLS
+**Image messaging:** MIP-04 v2 encrypted media pipeline
+  - Images encrypted on phone with ChaCha20-Poly1305 (key derived from MLS epoch via HKDF)
+  - Encrypted blobs uploaded to Blossom (content-addressed storage)
+  - NanoClaw downloads, derives key, decrypts, verifies SHA-256 integrity
+  - No plaintext ever touches the network
+**Voice input:** Sayboard (FOSS, GPL-3.0, on-device Vosk speech recognition for GrapheneOS)
+
+### How It Works
+
+```
+White Noise (Phone)                    NanoClaw (Server)
+       │                                     │
+       │  Kind 443: KeyPackage (MLS identity) │
+       │◄────────────────────────────────────│
+       │                                     │
+       │  Kind 1059: Gift Wrap (Welcome)     │
+       │────────────────────────────────────►│
+       │                                     │
+       │  Kind 445: Group Events (E2EE)      │
+       │◄───────────────────────────────────►│
+       │                                     │
+       │  Blossom: Encrypted Media Blobs     │
+       │────────────────────────────────────►│
+```
+
+### Setup
+
+**Phone side:**
+1. Install White Noise from F-Droid or Obtainium
+2. Install Sayboard for voice-to-text (optional but recommended)
+3. Create a group in White Noise
+4. Add NanoClaw's npub to the group
+
+**NanoClaw side:**
+```bash
+# Set Nostr private key (or let it auto-generate)
+export MARMOT_NOSTR_PRIVATE_KEY=<hex_private_key>
+
+# Run the standalone test script
+npx tsx scripts/test-marmot-standalone.ts
+```
+
+The script publishes discovery events, waits for a Welcome from White Noise, joins the MLS group, and begins processing encrypted messages.
+
+### GitHub
+
+**Fork:** https://github.com/jorgenclaw/nanoclaw
+**Branch:** `feat/add-marmot-channel`
+**Status:** Working (text + images + voice), 347 tests passing
+
+---
+
 ## 📊 What This Setup Achieves
 
 ### Privacy Wins
 
 ✅ **Voice transcription:** Never touches cloud APIs
-✅ **Messaging:** End-to-end encrypted via Signal
+✅ **Messaging (Signal):** End-to-end encrypted via Signal/Molly
+✅ **Messaging (Marmot):** End-to-end encrypted, fully decentralized (no corporate servers)
+✅ **Image sharing:** MIP-04 v2 encrypted media — no plaintext on the network
+✅ **Voice input:** On-device with Sayboard/Vosk — no cloud, no data exfil
 ✅ **Bitcoin transactions:** Your node, your verification
 ✅ **Lightning payments:** Cashu privacy layer
 ✅ **Wallet connections:** Over Tor, no third-party sees addresses
@@ -410,16 +483,6 @@ Every limitation is chosen deliberately for freedom, not imposed by vendors.
 - Zeus Lightning
 - Cake Wallet
 - NanoClaw framework
-
----
-
-## 💰 Support This Work
-
-Building and documenting sovereignty infrastructure takes time. If you find this valuable, tips are appreciated but never required.
-
-**[→ TIP_JAR.md - Lightning, Bitcoin, Litecoin, Monero](TIP_JAR.md)**
-
-We practice what we preach: sovereign, permissionless, privacy-preserving payments only.
 
 ---
 
