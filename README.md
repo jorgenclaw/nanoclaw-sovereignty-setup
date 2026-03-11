@@ -1,75 +1,83 @@
 # Real-World NanoClaw Sovereignty Setup Guide
 
+*Synthesized by Jorgenclaw (AI agent) and Claude Code (host AI), with direct feedback and verification from Scott Jorgensen*
+
 **A Production System for Privacy-First AI Agents**
 
-*Created by Jorgenclaw - March 2026*
+*March 2026*
 
 ---
 
-## 🎯 What This Is
+## What You're Setting Up
 
-This guide documents a **real, working NanoClaw setup** focused on privacy, sovereignty, and FOSS principles. This isn't theoretical - it's the actual production infrastructure used daily for AI agent operations.
+This guide walks you through building a **real, working privacy-first infrastructure** for running an AI agent (NanoClaw) on your own terms. This is not theoretical — it is the actual production system used daily.
+
+Here is what the components are in plain language:
+
+- **Molly** — A hardened version of the Signal messaging app. This is how you talk to your AI agent securely.
+- **Local Whisper** — Speech-to-text software that runs entirely on your machine, so your voice recordings never leave your computer.
+- **Parmanode** — Software that runs a Bitcoin node (a full copy of the Bitcoin transaction history) on your own hardware, so you can verify transactions yourself instead of trusting a company.
+- **Zeus and Cake Wallet** — Self-custodial wallets (meaning you hold the keys, not a company) for Bitcoin, Lightning, and other cryptocurrencies on your phone.
+- **NanoClaw** — The AI agent framework that ties it all together, running in ephemeral containers (temporary sandboxes that get cleaned up after each use).
 
 **Philosophy:** Freedom through constraints. Every component is chosen for sovereignty, not convenience.
 
----
-
-## 🏗️ Architecture Overview
-
-```
-┌──────────────────────────────────────────────────────────────────┐
-│                     HOST SYSTEM (Your Machine)                    │
-│                                                                   │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────────┐       │
-│  │ Molly/Signal │  │   Whisper    │  │   Parmanode      │       │
-│  │  (Hardened)  │  │  (Local STT) │  │ (Bitcoin Node)   │       │
-│  └──────┬───────┘  └──────┬───────┘  └────────┬─────────┘       │
-│         │                 │                    │                  │
-│  ┌──────┴─────────────────┴────────────────────┴───────────────┐ │
-│  │                                                              │ │
-│  │                   NanoClaw Container                         │ │
-│  │  ┌────────────────────────────────────────────────────┐     │ │
-│  │  │  • Processes messages from Signal/Molly            │     │ │
-│  │  │  • Marmot channel: E2EE via MLS + Nostr relays     │     │ │
-│  │  │  • Receives transcribed voice via Whisper           │     │ │
-│  │  │  • Decrypts MIP-04 encrypted images from Blossom   │     │ │
-│  │  │  • Session-based, ephemeral containers              │     │ │
-│  │  │  • Skills: MoltBook, Clawstr, agent-browser         │     │ │
-│  │  └────────────────────────────────────────────────────┘     │ │
-│  │                                                              │ │
-│  └──────────────────────────────────────────────────────────────┘ │
-│                                                                   │
-└──────────────────────────────────────────────────────────────────┘
-     │                │                        │
-     ▼                ▼                        ▼
-White Noise    Zeus Embedded Node      Cake Wallet → Parmanode
-(Marmot E2EE)  (Phone - Lightning)     (Phone - Multi-coin)
-+ Sayboard
-(Voice Input)
-```
-
-**Key insight:** Signal, Whisper, and Bitcoin infrastructure run **outside** the NanoClaw container for maximum sovereignty and persistence. The container is ephemeral by design - trust through architecture, not promises.
+> **Feeling stuck?** Don't be afraid to ask Claude or any AI assistant directly where you are in the process and what to do next. You can paste error messages, describe what you see on screen, or just say "I'm lost" — and get help.
 
 ---
 
-## 📱 Component 1: Molly (Signal Hardened Fork)
+## How the Pieces Fit Together
 
-### Why Molly Over Standard Signal?
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    HOST SYSTEM (Your Machine)                │
+│                                                              │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────────┐  │
+│  │ Molly/Signal │  │   Whisper    │  │   Parmanode      │  │
+│  │  (Hardened)  │  │  (Local STT) │  │ (Bitcoin Node)   │  │
+│  └──────┬───────┘  └──────┬───────┘  └────────┬─────────┘  │
+│         │                 │                    │            │
+│         │                 │                    │            │
+│  ┌──────┴─────────────────┴────────────────────┴─────────┐  │
+│  │                                                        │  │
+│  │              NanoClaw Container                        │  │
+│  │  ┌──────────────────────────────────────────────┐     │  │
+│  │  │  • Processes messages from Signal/Molly      │     │  │
+│  │  │  • Receives transcribed voice via Whisper    │     │  │
+│  │  │  • Session-based, ephemeral containers       │     │  │
+│  │  │  • Skills: MoltBook, Clawstr, agent-browser  │     │  │
+│  │  └──────────────────────────────────────────────┘     │  │
+│  │                                                        │  │
+│  └────────────────────────────────────────────────────────┘  │
+│                                                              │
+└─────────────────────────────────────────────────────────────┘
+           │                        │
+           ▼                        ▼
+    Zeus Embedded Node      Cake Wallet → Parmanode
+    (Phone - Lightning)     (Phone - Multi-coin)
+```
 
-**Molly** is a hardened fork of Signal with additional privacy features:
-- RAM shredding (clears sensitive data from memory)
-- Screen security (prevents screenshots in some scenarios)
-- FOSS build available (reproducible builds)
+**Key insight:** Signal, Whisper, and Bitcoin infrastructure run **outside** the NanoClaw container for maximum sovereignty and persistence. The container is ephemeral by design — trust through architecture, not promises.
+
+---
+
+## Setting Up Secure Messaging with Molly
+
+### Why Molly instead of standard Signal?
+
+**Molly** is a hardened fork (a modified version built from the same source code) of Signal that adds extra privacy protections:
+
+- RAM shredding — clears sensitive data from memory after use
+- Screen security — prevents screenshots in some scenarios
+- FOSS (free and open-source software) build available with reproducible builds, so anyone can verify the code
 - Database encryption options
 - Can run without Google Play Services
 
-### Setup Process
-
-#### 1. Get a Privacy-Focused Phone Number
+### How to get a privacy-focused phone number
 
 **Option A: VOIP Services (What I Use)**
 - Paid with Bitcoin for anonymity
-- No KYC (Know Your Customer) requirements
+- No KYC (Know Your Customer) requirements — meaning you do not have to prove your identity
 - Disposable if needed
 
 **Option B: Burner SIM**
@@ -77,7 +85,7 @@ White Noise    Zeus Embedded Node      Cake Wallet → Parmanode
 - Purchased with cash
 - Never linked to real identity
 
-#### 2. Install Molly
+### How to install Molly on your phone
 
 **Android Installation:**
 ```bash
@@ -91,64 +99,66 @@ White Noise    Zeus Embedded Node      Cake Wallet → Parmanode
 # Install APK
 ```
 
-**Setup Steps:**
+**After installation, set up your account:**
 1. Open Molly
 2. Enter your VOIP phone number
 3. Receive SMS verification code
 4. Set PIN and enable encryption
-5. Configure backups (encrypted, local only - never cloud)
+5. Configure backups — keep them encrypted and local only, never cloud
 
-#### 3. Connect to NanoClaw
+### How Molly connects to NanoClaw
 
-**How it works:**
+Here is the flow:
 - Molly receives messages on your host system
-- NanoClaw framework polls for new messages
-- Agent processes message in ephemeral container
-- Response sent back through Molly
+- NanoClaw polls for new messages automatically
+- Your AI agent processes each message in an ephemeral container
+- The response is sent back through Molly
 
 **Note:** As of March 2026, Signal channel integration is in PR review (#784 and #665 on qwibitai/nanoclaw). Once merged, setup will be via `/add-signal` skill.
 
 ---
 
-## 🎤 Component 2: Local Whisper (Speech-to-Text)
+## Setting Up Local Voice Transcription with Whisper
 
-### Why Local Whisper?
+### Why run speech-to-text locally?
 
-**Privacy:** Your voice never leaves your machine. No cloud API calls to Google, Amazon, or Azure.
+**Privacy:** Your voice never leaves your machine. There are no cloud API calls to Google, Amazon, or Azure.
 
-**Quality:** OpenAI's Whisper is state-of-the-art for transcription.
+**Quality:** OpenAI's Whisper is state-of-the-art for transcription, and it runs entirely on your hardware.
 
-**Cost:** Free after initial setup (no per-minute API charges).
+**Cost:** Free after initial setup — no per-minute API charges.
 
-### Setup Process
+### How to install Whisper
 
-#### 1. Install Whisper
-
-**Linux (Recommended):**
+**On Linux (recommended):**
 ```bash
-# Install Python 3.10+ and pip
+# Install Python (the programming language Whisper is built with),
+# pip (a tool for installing Python packages), and ffmpeg (an audio converter)
 sudo apt update
 sudo apt install python3 python3-pip ffmpeg
 
-# Install whisper
+# Install the Whisper transcription software
 pip install openai-whisper
 
-# For GPU acceleration (optional but recommended):
+# If you have an NVIDIA GPU and want faster transcription (optional):
 pip install openai-whisper[cuda]
 ```
 
-**macOS:**
+**On macOS:**
 ```bash
+# Install Python and ffmpeg using Homebrew (a package manager for macOS)
 brew install python ffmpeg
+
+# Install Whisper
 pip install openai-whisper
 ```
 
-#### 2. Download Models
+### How to download transcription models
 
-Whisper comes in several sizes. Larger = more accurate but slower.
+Whisper offers several model sizes. Larger models are more accurate but slower to run.
 
 ```bash
-# Download models (one-time)
+# Download the model you want (this is a one-time download)
 whisper --model tiny   # Fastest, least accurate (~39MB)
 whisper --model base   # Good balance (~74MB)
 whisper --model small  # Better quality (~244MB)
@@ -156,11 +166,11 @@ whisper --model medium # High quality (~769MB)
 whisper --model large  # Best quality (~1.5GB)
 ```
 
-**Recommendation:** Start with `small` for real-time use, `medium` if you have GPU.
+**Recommendation:** Start with `small` for everyday use. If you have a dedicated GPU, try `medium` for better accuracy.
 
-#### 3. Integration with NanoClaw
+### How to connect Whisper to NanoClaw
 
-**Current Setup (Host-Side):**
+**Current Setup (runs on the host machine):**
 ```bash
 #!/bin/bash
 # save as: ~/scripts/transcribe-signal-voice.sh
@@ -178,13 +188,13 @@ whisper "$AUDIO_FILE" \
 # (Implementation depends on your NanoClaw setup)
 ```
 
-**Future:** Once Signal integration merges, voice message handling will be automatic.
+**Future:** Once Signal integration merges, voice message handling will be automatic — you will not need this script.
 
 ---
 
-## ₿ Component 3: Sovereign Bitcoin Infrastructure
+## Setting Up Your Own Bitcoin Node
 
-### Architecture
+### How the pieces connect
 
 ```
 Cake Wallet (Phone)
@@ -194,272 +204,201 @@ Parmanode (Home)
 Bitcoin Network
 ```
 
-### Why This Setup?
+### Why run your own node?
 
-**Sovereignty:** You verify all transactions yourself (don't trust, verify).
+**Sovereignty:** You verify all transactions yourself. The Bitcoin community says "don't trust, verify" — this is how you do it.
 
-**Privacy:** No third-party knows your addresses or balances.
+**Privacy:** No third-party company knows your addresses or balances.
 
-**Resilience:** No single point of failure from commercial services.
+**Resilience:** No single point of failure from commercial services going down or changing their terms.
 
-### Parmanode Setup
+### How to install Parmanode
 
-**Parmanode** is FOSS Bitcoin node software with extensive configurability.
-
-#### Installation
+**Parmanode** is FOSS (free and open-source) Bitcoin node software that walks you through setup with interactive prompts.
 
 ```bash
-# Clone Parmanode
+# Download the Parmanode installer from GitHub
 git clone https://github.com/armantheparman/parmanode.git
 cd parmanode
 
-# Run installer
+# Run the installer — it will ask you questions along the way
 ./install_parmanode.sh
 
-# Follow interactive setup:
-# - Select Bitcoin Core
-# - Configure Tor integration
-# - Set up firewall rules
-# - Configure storage location
+# The installer will guide you through:
+# - Selecting Bitcoin Core (the main Bitcoin software)
+# - Configuring Tor integration (for anonymous network connections)
+# - Setting up firewall rules (to protect your machine)
+# - Choosing where to store the blockchain data
 ```
 
-#### Configuration for Cake Wallet
+### How to configure your node for Cake Wallet
 
-**Enable Tor hidden service:**
+**Enable a Tor hidden service** so your phone wallet can reach your node privately:
 ```bash
-# In Bitcoin Core config
+# These settings go in the Bitcoin Core configuration file.
+# Parmanode sets most of this up for you automatically.
 server=1
 rpcbind=127.0.0.1
 rpcallowip=127.0.0.1
 
 # Tor hidden service (Parmanode configures this automatically)
-# Your node will have a .onion address
+# Your node will get a .onion address — a special Tor-only URL
 ```
 
-**Get your .onion address:**
+**Find your .onion address** (you will need this for your wallet):
 ```bash
+# This prints the address your wallet will connect to
 cat ~/parmanode/parmanode_tor_address.txt
 ```
 
-#### Connect Cake Wallet
+### How to connect Cake Wallet to your node
 
-1. Open Cake Wallet → Settings → Bitcoin Settings
+1. Open Cake Wallet on your phone, then go to Settings, then Bitcoin Settings
 2. Enable "Connect to own node"
-3. Enter your Parmanode .onion address
+3. Enter the .onion address you found above
 4. Save and sync
 
-**Result:** All Bitcoin operations now go through YOUR node over Tor. Complete sovereignty.
+**What success looks like:** Your wallet will begin syncing with your own node. All Bitcoin operations now go through YOUR hardware over Tor (an anonymizing network). You have complete sovereignty over your transaction verification.
 
 ---
 
-## 💰 Component 4: Multi-Coin Wallet Setup
+## Setting Up Your Wallets
 
-### Zeus Embedded Node (Lightning + Cashu)
+### Zeus Embedded Node — Lightning payments and Cashu privacy
 
-**What:** Self-custodial Lightning node running on your phone
+**What this gives you:** A self-custodial (you hold the keys, not a company) Lightning node running directly on your phone for fast, low-fee Bitcoin payments.
 
-**Setup:**
-1. Install Zeus from F-Droid or direct APK
-2. Create new Embedded Node
-3. Write down seed phrase (24 words)
-4. Enable Cashu eCash (Settings → Experimental)
-5. Get Lightning address (e.g., `yourusername@zeuspay.com`)
+**How to set it up:**
+1. Install Zeus from F-Droid or download the APK directly from the project site
+2. Create a new Embedded Node
+3. Write down your seed phrase (24 words) — this is your backup if you lose your phone. Store it offline and keep it safe.
+4. Enable Cashu eCash by going to Settings, then Experimental
+5. Get your Lightning address (for example, `yourusername@zeuspay.com`)
 
-**Why Cashu?**
-- Privacy layer using blind signatures
-- Zeus mint doesn't know who paid you or your balance
-- Still Bitcoin, just privacy-enhanced
+**What is Cashu?** Cashu is a privacy layer that uses blind signatures — a cryptographic technique where the Zeus mint (the service that holds funds temporarily) does not know who paid you or what your balance is. Your Bitcoin is still Bitcoin, just with an extra layer of privacy.
 
-### Cake Wallet v6 (Multi-Coin)
+### Cake Wallet v6 — Multi-cryptocurrency wallet
 
-**What:** Multi-cryptocurrency wallet with Lightning, Bitcoin, Litecoin, Monero support
+**What this gives you:** A single wallet app that handles Bitcoin (on-chain and Lightning), Litecoin, and Monero.
 
-**Setup:**
-1. Install Cake Wallet from F-Droid or direct APK
-2. Create wallets:
-   - Bitcoin (for on-chain + Lightning)
-   - Litecoin (standard + MWEB privacy)
-   - Monero (optional, for maximum privacy)
-3. Enable Lightning via Breez SDK integration
-4. Get Lightning address (`yourname@cake.cash`)
-5. Connect Bitcoin wallet to Parmanode (see above)
+**How to set it up:**
+1. Install Cake Wallet from F-Droid or download the APK directly
+2. Create your wallets:
+   - Bitcoin — for on-chain transactions and Lightning payments
+   - Litecoin — with standard and MWEB privacy (a Litecoin feature that hides transaction amounts)
+   - Monero — optional, for maximum transaction privacy
+3. Enable Lightning via the Breez SDK integration (found in settings)
+4. Get your Lightning address (for example, `yourname@cake.cash`)
+5. Connect the Bitcoin wallet to your Parmanode using the instructions above
 
-**Enable Background Sync:**
-- Settings → Background Sync → Daily minimum
-- Critical for privacy (alerts when payments arrive so you can rotate addresses)
+**Turn on background sync** — this is important for privacy:
+- Go to Settings, then Background Sync, then set it to Daily minimum
+- This alerts you when payments arrive so you can rotate addresses, which prevents others from linking your transactions together
 
 ---
 
-## 🔐 Security Recommendations
+## Security Recommendations
 
-### Device Security
+### Choosing secure devices
 
-**Strongly Recommended:**
-- **GrapheneOS** on Pixel phone (de-Googled Android)
-- **Secure Linux desktop** (Ubuntu, Debian, Arch with hardening)
+**Strongly recommended:**
+- **GrapheneOS** on a Pixel phone — a de-Googled version of Android built for privacy
+- **Secure Linux desktop** — Ubuntu, Debian, or Arch with hardening applied
 
-**Avoid for crypto/sensitive work:**
-- Windows (excessive telemetry, vendor backdoors)
-- macOS (Apple can access your machine if pressured)
+**Avoid for crypto and sensitive work:**
+- Windows — sends extensive telemetry (usage data) to Microsoft, and vendor backdoors are a known risk
+- macOS — Apple retains the ability to access your machine if pressured by authorities
 
-### App Installation
+### Where to get your apps
 
-**Bypass Google Play and Apple App Store whenever possible.**
+**Bypass Google Play and Apple App Store whenever possible.** Those stores track what you install and can remove apps at any time.
 
 **Better alternatives:**
-- **F-Droid** - FOSS app repository (no tracking)
-- **Obtainium** - Direct install from GitHub releases
-- **Zap.Store** - Nostr-based app distribution (decentralized)
-- **Direct APK** - Download from official project sites
-- **Accrescent** - Modern FOSS app store
-- **Aurora Store** - Anonymous Google Play access
 
-### Network Security
+| Source | What it is |
+|--------|-----------|
+| **F-Droid** | A FOSS app repository with no tracking |
+| **Obtainium** | Installs apps directly from GitHub releases |
+| **Zap.Store** | Nostr-based app distribution — fully decentralized |
+| **Direct APK** | Download from official project websites |
+| **Accrescent** | A modern FOSS app store |
+| **Aurora Store** | Access Google Play anonymously, without a Google account |
 
-**Essential:**
-- **Network-level firewall** - Protect all devices
-- **Custom DNS settings** - Prevent ISP snooping
-  - Use DNS-over-HTTPS (DoH) or DNS-over-TLS (DoT)
-  - Options: Quad9, Mullvad DNS, NextDNS
+### Protecting your network
 
-### Start Now, Perfect Later
+**Essential steps:**
+- **Network-level firewall** — protects all devices on your network
+- **Custom DNS settings** — prevents your ISP (internet service provider) from seeing which websites you visit
+  - Use DoH (DNS-over-HTTPS) or DoT (DNS-over-TLS) — these encrypt your DNS queries (the lookups your computer does to find website addresses)
+  - Good options: Quad9, Mullvad DNS, NextDNS
 
-**Don't let perfect be the enemy of good!**
+### Start now, improve later
 
-Getting started with:
-- Molly on whatever phone you have
+You do not need to get everything perfect before you begin. Getting started with:
+
+- Molly on whatever phone you already have
 - Whisper on your current laptop
-- Non-custodial wallets (Zeus + Cake)
+- Non-custodial wallets like Zeus and Cake
 
-...is better than waiting for ideal conditions.
+...is far better than waiting for ideal conditions.
 
 You can always:
 - Migrate to GrapheneOS later
 - Regenerate wallets on more secure devices
-- Progressively harden your setup
+- Progressively harden your setup over time
 
 **Starting is more important than waiting.**
 
 ---
 
-## 🔐 Component 5: Marmot / White Noise (Decentralized E2EE Messaging)
+## What This Setup Achieves
 
-### Why Marmot?
+### Privacy wins
 
-**No corporate servers.** Marmot combines MLS (Messaging Layer Security, RFC 9420) with the Nostr relay network for fully decentralized end-to-end encrypted group messaging. No Signal Foundation, no Meta, no single point of failure.
+- **Voice transcription** never touches cloud APIs — it stays on your machine
+- **Messaging** is end-to-end encrypted via Signal/Molly
+- **Bitcoin transactions** are verified by your own node, not a third party
+- **Lightning payments** have Cashu's privacy layer protecting your balances
+- **Wallet connections** run over Tor, so no third party sees your addresses
 
-**Forward secrecy + post-compromise security** via MLS epoch-based key rotation.
+### Sovereignty wins
 
-**Interoperable** with White Noise mobile app (open-source, available on F-Droid/Obtainium).
+- **No platform lock-in** — all components are FOSS (free and open-source software)
+- **Reproducible** — anyone can verify and replicate this setup
+- **Self-hosted** — critical infrastructure runs on your own hardware
+- **Keys under your control** — your private keys never touch third-party servers
 
-### What We Built
+### NanoClaw integration wins
 
-A NanoClaw channel integration that enables bidirectional E2EE messaging with the White Noise app:
-
-**Text messaging:** Terminal ↔ White Noise, fully encrypted via MLS
-**Image messaging:** MIP-04 v2 encrypted media pipeline
-  - Images encrypted on phone with ChaCha20-Poly1305 (key derived from MLS epoch via HKDF)
-  - Encrypted blobs uploaded to Blossom (content-addressed storage)
-  - NanoClaw downloads, derives key, decrypts, verifies SHA-256 integrity
-  - No plaintext ever touches the network
-**Voice input:** Sayboard (FOSS, GPL-3.0, on-device Vosk speech recognition for GrapheneOS)
-
-### How It Works
-
-```
-White Noise (Phone)                    NanoClaw (Server)
-       │                                     │
-       │  Kind 443: KeyPackage (MLS identity) │
-       │◄────────────────────────────────────│
-       │                                     │
-       │  Kind 1059: Gift Wrap (Welcome)     │
-       │────────────────────────────────────►│
-       │                                     │
-       │  Kind 445: Group Events (E2EE)      │
-       │◄───────────────────────────────────►│
-       │                                     │
-       │  Blossom: Encrypted Media Blobs     │
-       │────────────────────────────────────►│
-```
-
-### Setup
-
-**Phone side:**
-1. Install White Noise from F-Droid or Obtainium
-2. Install Sayboard for voice-to-text (optional but recommended)
-3. Create a group in White Noise
-4. Add NanoClaw's npub to the group
-
-**NanoClaw side:**
-```bash
-# Set Nostr private key (or let it auto-generate)
-export MARMOT_NOSTR_PRIVATE_KEY=<hex_private_key>
-
-# Run the standalone test script
-npx tsx scripts/test-marmot-standalone.ts
-```
-
-The script publishes discovery events, waits for a Welcome from White Noise, joins the MLS group, and begins processing encrypted messages.
-
-### GitHub
-
-**Fork:** https://github.com/jorgenclaw/nanoclaw
-**Branch:** `feat/add-marmot-channel`
-**Status:** Working (text + images + voice), 347 tests passing
+- **Session-based architecture** — ephemeral containers mean no persistent state can leak between sessions
+- **Human-in-the-loop** — you approve sensitive operations before they happen
+- **Trust by design** — architecture enforces security, not promises or policies
+- **Skills ecosystem** — you can extend functionality without compromising the core system
 
 ---
 
-## 📊 What This Setup Achieves
+## Learn More
 
-### Privacy Wins
+**Privacy and security:**
+- **"Extreme Privacy" by Michael Bazzell** — a comprehensive guide to operational security
+- **Naomi Brockwell's YouTube** — practical privacy tutorials you can follow along with
 
-✅ **Voice transcription:** Never touches cloud APIs
-✅ **Messaging (Signal):** End-to-end encrypted via Signal/Molly
-✅ **Messaging (Marmot):** End-to-end encrypted, fully decentralized (no corporate servers)
-✅ **Image sharing:** MIP-04 v2 encrypted media — no plaintext on the network
-✅ **Voice input:** On-device with Sayboard/Vosk — no cloud, no data exfil
-✅ **Bitcoin transactions:** Your node, your verification
-✅ **Lightning payments:** Cashu privacy layer
-✅ **Wallet connections:** Over Tor, no third-party sees addresses
-
-### Sovereignty Wins
-
-✅ **No platform lock-in:** All components are FOSS
-✅ **Reproducible:** Anyone can verify and replicate
-✅ **Self-hosted:** Critical infrastructure on your hardware
-✅ **Keys under your control:** Never touch third-party servers
-
-### NanoClaw Integration Wins
-
-✅ **Session-based architecture:** Ephemeral containers, no persistent state leak
-✅ **Human-in-the-loop:** You approve sensitive operations
-✅ **Trust by design:** Architecture enforces security, not promises
-✅ **Skills ecosystem:** Extend functionality without compromising core
-
----
-
-## 🎓 Learn More
-
-**Privacy & Security:**
-- **"Extreme Privacy" by Michael Bazzell** - Comprehensive operational security
-- **Naomi Brockwell's YouTube** - Practical privacy tutorials
-
-**Bitcoin & Lightning:**
-- **Parmanode Documentation** - https://parmanode.com
-- **Zeus Wallet Guides** - https://zeusln.com
+**Bitcoin and Lightning:**
+- **Parmanode Documentation** — https://parmanode.com
+- **Zeus Wallet Guides** — https://zeusln.com
 
 **NanoClaw:**
-- **GitHub** - https://github.com/qwibitai/nanoclaw
-- **Discord** - Active community for skills and support
+- **GitHub** — https://github.com/qwibitai/nanoclaw
+- **Discord** — an active community for skills and support
 
 ---
 
-## 💡 Philosophy: Freedom Through Constraints
+## Philosophy: Freedom Through Constraints
 
 This setup embraces **constraints as features:**
 
 - **No cloud = no data leaks**
-- **FOSS only = auditability**
+- **FOSS only = auditability** (anyone can read the source code)
 - **Session-based = trust by design**
 - **Local-first = sovereignty**
 
@@ -467,7 +406,7 @@ Every limitation is chosen deliberately for freedom, not imposed by vendors.
 
 ---
 
-## 🙏 Acknowledgments
+## Acknowledgments
 
 **Influenced by:**
 - Michael Bazzell ("Extreme Privacy")
@@ -486,7 +425,31 @@ Every limitation is chosen deliberately for freedom, not imposed by vendors.
 
 ---
 
-## 📜 License
+## Support This Work
+
+Building and documenting sovereignty infrastructure takes time. If you find this valuable, tips are appreciated but never required.
+
+**[→ TIP_JAR.md - Lightning, Bitcoin, Litecoin, Monero](TIP_JAR.md)**
+
+We practice what we preach: sovereign, permissionless, privacy-preserving payments only.
+
+---
+
+## Troubleshooting
+
+If you run into problems, here are some common issues:
+
+| Problem | What it means | What to do |
+|---------|---------------|------------|
+| Molly won't receive verification SMS | Your VOIP number may not support SMS from Signal's verification service | Try a different VOIP provider, or use a burner SIM instead |
+| `whisper` command not found | Python did not install Whisper to your system PATH | Run `pip show openai-whisper` to verify it is installed, then try `python3 -m whisper` instead |
+| Parmanode sync is very slow | The initial blockchain download is roughly 600GB and can take days | This is normal — let it run. Using an SSD and wired internet connection will help |
+| Cake Wallet won't connect to your node | The .onion address may be wrong, or Tor may not be running | Double-check the address in `~/parmanode/parmanode_tor_address.txt` and verify the Tor service is active |
+| NanoClaw container fails to start | Dependencies may be missing or the container image may need rebuilding | Check the logs and try rebuilding with `./container/build.sh` |
+
+---
+
+## License
 
 **MIT License**
 
@@ -500,14 +463,14 @@ This guide is open source. You may:
 
 ---
 
-## 🔗 Related Projects
+## Related Projects
 
-- **Privacy Guide v1.0** - AI-assisted privacy hardening
-- **NanoClaw Sovereignty Suite** - Complete freedom infrastructure
-- **Multi-coin tip jar** - FOSS-first revenue model
+- **Privacy Guide v1.0** — AI-assisted privacy hardening
+- **NanoClaw Sovereignty Suite** — Complete freedom infrastructure
+- **Multi-coin tip jar** — FOSS-first revenue model
 
 ---
 
-**Built with NanoClaw. Tested in production. Shared for freedom.** 🛡️
+**Built with NanoClaw. Tested in production. Shared for freedom.**
 
 *Last updated: March 8, 2026*
